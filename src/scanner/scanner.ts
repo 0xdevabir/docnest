@@ -81,7 +81,7 @@ export class RepositoryScanner {
 
     const configs = detectConfigs(files);
     const configFileNames = configs.map((c) => path.basename(c.path));
-    const framework = detectFramework(deps, configFileNames);
+    const framework = detectFramework(deps, configFileNames, files);
 
     const result: ProjectStructure = {
       root,

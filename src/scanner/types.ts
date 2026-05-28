@@ -31,6 +31,12 @@ export type FrameworkType =
   | "nest"
   | "express"
   | "fastify"
+  | "prisma"
+  | "tailwind"
+  | "shadcn"
+  | "docker"
+  | "postgresql"
+  | "supabase"
   | "none";
 
 export type MonorepoType =
@@ -112,10 +118,26 @@ export interface MonorepoInfo {
   workspaces: WorkspacePackage[];
 }
 
-export interface FrameworkDetection {
-  primary: FrameworkType;
-  confidence: "high" | "medium" | "low";
+export interface DetectedFramework {
+  id: string;
+  name: string;
+  /** Numeric confidence in [0, 1] */
+  confidence: number;
+  /** Human-readable evidence strings */
   evidence: string[];
+}
+
+export interface FrameworkDetection {
+  /** Highest-confidence detected framework (backward-compatible) */
+  primary: FrameworkType;
+  /** String confidence band for primary (backward-compatible) */
+  confidence: "high" | "medium" | "low";
+  /** Numeric confidence score for primary in [0, 1] */
+  score: number;
+  /** All evidence strings from the primary detector */
+  evidence: string[];
+  /** All detected frameworks sorted by confidence descending */
+  detected: DetectedFramework[];
 }
 
 export interface ScanStats {

@@ -8,12 +8,19 @@ export { extractDependencies } from "./detectors/dependencies.js";
 export { extractScripts } from "./detectors/scripts.js";
 export { detectMonorepo } from "./detectors/monorepo.js";
 export { detectFramework } from "./detectors/framework.js";
+export {
+  FrameworkEngine,
+  BUILTIN_DETECTORS,
+  runDetection,
+  combineWeights,
+} from "./detectors/framework/index.js";
 export type {
   CachedScan,
   ConfigFile,
   ConfigType,
   Dependency,
   DependencyType,
+  DetectedFramework,
   Entrypoint,
   EntrypointType,
   FileEntry,
@@ -28,3 +35,7 @@ export type {
   ScriptEntry,
   WorkspacePackage,
 } from "./types.js";
+export type {
+  DetectorContext,
+  FrameworkDetector,
+} from "./detectors/framework/types.js";
