@@ -56,6 +56,10 @@ export type {
   ExplainRequest,
 } from "./ai/index.js";
 
+// AST analysis engine
+export { ASTAnalyzerService, analyzeSourceFile, buildModuleGraph, detectCycles, emptyGraph, findConsumers, findTsConfig, loadCompilerOptions, ModuleResolver, parseSingleFile, TypeScriptParser } from "./analyzer/index.js";
+export type { AnalysisOptions, AnalysisResult, ApiFramework, ApiRouteEntry, ClassEntry, ComponentEntry, ComponentKind, ExportEntry, ExportKind, FileAnalysis, FunctionEntry, FunctionKind, GraphEdge, GraphNode, HookEntry, HttpMethod, ImportBinding, ImportEntry, ImportKind, MethodEntry, ModuleGraph, ParamEntry, PropertyEntry, ServiceEntry, ServiceKind, SourceLanguage, SourceLocation, SourceRange } from "./analyzer/index.js";
+
 // Types
 export type { CliContext, Result, DeepPartial, Dict, Maybe, SemVer } from "./types/index.js";
 export { ok, err } from "./types/index.js";
