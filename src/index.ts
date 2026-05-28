@@ -60,6 +60,12 @@ export type {
 export { ASTAnalyzerService, analyzeSourceFile, buildModuleGraph, detectCycles, emptyGraph, findConsumers, findTsConfig, loadCompilerOptions, ModuleResolver, parseSingleFile, TypeScriptParser } from "./analyzer/index.js";
 export type { AnalysisOptions, AnalysisResult, ApiFramework, ApiRouteEntry, ClassEntry, ComponentEntry, ComponentKind, ExportEntry, ExportKind, FileAnalysis, FunctionEntry, FunctionKind, GraphEdge, GraphNode, HookEntry, HttpMethod, ImportBinding, ImportEntry, ImportKind, MethodEntry, ModuleGraph, ParamEntry, PropertyEntry, ServiceEntry, ServiceKind, SourceLanguage, SourceLocation, SourceRange } from "./analyzer/index.js";
 
+// Architecture understanding engine
+export { ArchitectureAnalyzerService, DEFAULT_SIGNAL_WEIGHTS } from "./architecture/index.js";
+export { AUTH_LIB_RULES, PATTERN_RULES, STATE_LIB_RULES } from "./architecture/index.js";
+export { PATH_SIGNAL_RULES, IMPORT_SIGNAL_RULES, NAMING_RULES } from "./architecture/index.js";
+export type { ArchitectureMap, ArchitectureOptions, ArchZone, ArchLayer, FeatureBoundary, ServiceLayer, StateManagementSystem, ApiArchitecture, AuthSystem, ArchPattern, CoreModule, BusinessLogicArea, ProjectMap, DirectoryNode, ArchitectureGraph, ArchNode, ArchEdge, ZoneKind, LayerKind, PatternKind, StateKind, AuthKind, CoreModuleRole, SignalWeights, ArchEvidence } from "./architecture/index.js";
+
 // Types
 export type { CliContext, Result, DeepPartial, Dict, Maybe, SemVer } from "./types/index.js";
 export { ok, err } from "./types/index.js";
