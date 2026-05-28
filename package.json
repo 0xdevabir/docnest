@@ -1,0 +1,78 @@
+{
+  "name": "docsmith",
+  "version": "0.1.0",
+  "description": "A powerful developer documentation tool — built for teams who ship.",
+  "keywords": ["docs", "cli", "documentation", "markdown", "developer-tools"],
+  "homepage": "https://github.com/0xdevabir/docsmith",
+  "bugs": {
+    "url": "https://github.com/0xdevabir/docsmith/issues"
+  },
+  "license": "MIT",
+  "author": {
+    "name": "0xdevabir"
+  },
+  "type": "module",
+  "bin": {
+    "docsmith": "./dist/cli/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "build:watch": "tsup --watch",
+    "dev": "tsx src/cli/index.ts",
+    "start": "node dist/cli/index.js",
+    "lint": "eslint src --ext .ts",
+    "lint:fix": "eslint src --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check",
+    "clean": "rimraf dist",
+    "prepublishOnly": "pnpm check && pnpm build"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "cosmiconfig": "^9.0.0",
+    "dotenv": "^16.4.5",
+    "fs-extra": "^11.2.0",
+    "ora": "^8.0.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.14.9",
+    "@typescript-eslint/eslint-plugin": "^7.15.0",
+    "@typescript-eslint/parser": "^7.15.0",
+    "@vitest/coverage-v8": "^1.6.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "prettier": "^3.3.2",
+    "rimraf": "^5.0.7",
+    "tsup": "^8.1.0",
+    "tsx": "^4.16.2",
+    "typescript": "^5.5.3",
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.9"
+}
