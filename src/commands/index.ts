@@ -4,6 +4,7 @@ import { registerBuildCommand } from "./build.js";
 import { registerExplainCommand } from "./explain.js";
 import { registerGenerateCommand } from "./generate.js";
 import { registerInitCommand } from "./init.js";
+import { registerReadmeCommand } from "./readme.js";
 import { registerServeCommand } from "./serve.js";
 import { registerWatchCommand } from "./watch.js";
 
@@ -22,4 +23,5 @@ export function registerAllCommands(program: Command): void {
   registerWatchCommand(program);
   registerGenerateCommand(program);
   registerExplainCommand(program);
+  registerReadmeCommand(program);
 }
