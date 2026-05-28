@@ -2,6 +2,7 @@ import type { Command } from "commander";
 
 import { registerApiCommand } from "./api.js";
 import { registerBuildCommand } from "./build.js";
+import { registerContributingCommand } from "./contributing.js";
 import { registerExplainCommand } from "./explain.js";
 import { registerGenerateCommand } from "./generate.js";
 import { registerInitCommand } from "./init.js";
@@ -25,5 +26,6 @@ export function registerAllCommands(program: Command): void {
   registerGenerateCommand(program);
   registerExplainCommand(program);
   registerReadmeCommand(program);
+  registerContributingCommand(program);
   registerApiCommand(program);
 }
