@@ -8,8 +8,21 @@
  */
 
 // Config
-export { loadConfig, tryLoadConfig } from "./core/config/index.js";
-export type { DocSmithConfig, LoadConfigOptions, ResolvedConfig } from "./core/config/index.js";
+export { defineConfig, loadConfig, tryLoadConfig } from "./core/config/index.js";
+export type {
+  DocSmithConfig,
+  DocSmithUserConfig,
+  LoadConfigOptions,
+  ResolvedConfig,
+} from "./core/config/index.js";
+export type {
+  AIConfig,
+  DiagramConfig,
+  FrameworkConfig,
+  OutputConfig,
+  PluginEntry,
+  TemplatesConfig,
+} from "./core/config/schema.js";
 
 // Logger
 export { Logger, logger } from "./core/logger/index.js";
@@ -30,6 +43,18 @@ export {
 // Plugin system
 export { PluginRunner } from "./plugins/index.js";
 export type { DocSmithPlugin, PluginContext, PluginFactory } from "./plugins/index.js";
+
+// AI provider system
+export { aiRegistry } from "./ai/index.js";
+export type {
+  AIProvider,
+  AIProviderAdapter,
+  AIProviderConfig,
+  AIResponse,
+  AIUsage,
+  GenerateRequest,
+  ExplainRequest,
+} from "./ai/index.js";
 
 // Types
 export type { CliContext, Result, DeepPartial, Dict, Maybe, SemVer } from "./types/index.js";
