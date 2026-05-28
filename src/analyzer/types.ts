@@ -3,6 +3,12 @@
  * Describes WHAT code does, not how it's formatted.
  */
 
+// RouteAnalysis is the rich route metadata produced by src/analyzer/routes/.
+// Imported here as a type-only re-export so FileAnalysis can reference it
+// without creating a circular dependency.
+import type { RouteAnalysis } from "./routes/types.js";
+export type { RouteAnalysis } from "./routes/types.js";
+
 export interface SourceLocation {
   line: number;
   column: number;
@@ -220,7 +226,10 @@ export interface FileAnalysis {
   imports: ImportEntry[];
   components: ComponentEntry[];
   functions: FunctionEntry[];
+  /** Legacy flat route list — use `routes` for rich metadata. */
   apiRoutes: ApiRouteEntry[];
+  /** Rich route analysis: methods, middleware, auth, validation, groups. */
+  routes: RouteAnalysis;
   hooks: HookEntry[];
   classes: ClassEntry[];
   services: ServiceEntry[];

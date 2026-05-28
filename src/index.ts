@@ -57,8 +57,8 @@ export type {
 } from "./ai/index.js";
 
 // AST analysis engine
-export { ASTAnalyzerService, analyzeSourceFile, buildModuleGraph, detectCycles, emptyGraph, findConsumers, findTsConfig, loadCompilerOptions, ModuleResolver, parseSingleFile, TypeScriptParser } from "./analyzer/index.js";
-export type { AnalysisOptions, AnalysisResult, ApiFramework, ApiRouteEntry, ClassEntry, ComponentEntry, ComponentKind, ExportEntry, ExportKind, FileAnalysis, FunctionEntry, FunctionKind, GraphEdge, GraphNode, HookEntry, HttpMethod, ImportBinding, ImportEntry, ImportKind, MethodEntry, ModuleGraph, ParamEntry, PropertyEntry, ServiceEntry, ServiceKind, SourceLanguage, SourceLocation, SourceRange } from "./analyzer/index.js";
+export { ASTAnalyzerService, analyzeRoutes, analyzeSourceFile, buildModuleGraph, detectCycles, emptyGraph, findConsumers, findTsConfig, loadCompilerOptions, ModuleResolver, parseSingleFile, TypeScriptParser } from "./analyzer/index.js";
+export type { AnalysisOptions, AnalysisResult, ApiFramework, ApiRouteEntry, AuthInfo, AuthStrategy, ClassEntry, ComponentEntry, ComponentKind, ExportEntry, ExportKind, FileAnalysis, FunctionEntry, FunctionKind, GraphEdge, GraphNode, HookEntry, HttpMethod, ImportBinding, ImportEntry, ImportKind, MethodEntry, MiddlewarePurpose, MiddlewareRef, ModuleGraph, ParamEntry, ParamLocation, PropertyEntry, RouteAnalysis, RouteEntry, RouteGroup, RouteMethod, RouteParam, ServiceEntry, ServiceKind, SourceLanguage, SourceLocation, SourceRange, ValidationInfo, ValidationLib } from "./analyzer/index.js";
 
 // Architecture understanding engine
 export { ArchitectureAnalyzerService, DEFAULT_SIGNAL_WEIGHTS } from "./architecture/index.js";

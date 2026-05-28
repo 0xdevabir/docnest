@@ -3,6 +3,7 @@ import { posix } from "node:path";
 import ts from "typescript";
 
 import type { FileAnalysis, SourceLanguage } from "../types.js";
+import { analyzeRoutes } from "../routes/index.js";
 import { extractApiRoutes } from "./api-routes.js";
 import { extractClasses } from "./classes.js";
 import { extractComponents } from "./components.js";
@@ -30,6 +31,7 @@ export function analyzeSourceFile(
   const hooks = extractHooks(sf);
   const components = extractComponents(sf, isServerComponentFile);
   const apiRoutes = extractApiRoutes(sf, filePath);
+  const routes = analyzeRoutes(sf, filePath, imports);
   const services = extractServices(sf, classes);
 
   resolveExportSources(exports, filePath, compilerOptions);
@@ -53,6 +55,7 @@ export function analyzeSourceFile(
     components,
     functions,
     apiRoutes,
+    routes,
     hooks,
     classes,
     services,
