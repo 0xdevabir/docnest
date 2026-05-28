@@ -115,6 +115,16 @@ export type {
   SerializedNode,
 } from "./dependency-graph/index.js";
 
+// API docs engine
+export { generateApiDocs, collectRoutes, groupByTag, renderApiDocs, displayPath } from "./api-docs/index.js";
+export type {
+  ApiDocsContext,
+  ApiDocsOptions,
+  ApiDocsResult,
+  CollectedRoute,
+  RouteTag,
+} from "./api-docs/index.js";
+
 // Types
 export type { CliContext, Result, DeepPartial, Dict, Maybe, SemVer } from "./types/index.js";
 export { ok, err } from "./types/index.js";
