@@ -15,12 +15,25 @@ export function isLevelEnabled(current: LogLevel, target: LogLevel): boolean {
 }
 
 // ── Pretty formatter (development / human output) ─────────────────────────
+//
+// Badge layout:  <icon>  <message>  [meta]
+//   ·  debug message          (gray dot     — low-signal noise)
+//   ℹ  info message           (cyan ℹ       — normal output)
+//   ⚠  warning message        (amber ⚠      — attention needed)
+//   ✘  error message          (red ✘        — something failed)
 
-const LEVEL_BADGE: Record<Exclude<LogLevel, "silent">, string> = {
-  debug: chalk.gray("[debug]"),
-  info: chalk.cyan("[info] "),
-  warn: chalk.yellow("[warn] "),
-  error: chalk.red("[error]"),
+const LEVEL_ICON: Record<Exclude<LogLevel, "silent">, string> = {
+  debug: chalk.hex("#6B7280")(" · "),
+  info:  chalk.hex("#06B6D4")(" ℹ "),
+  warn:  chalk.hex("#F59E0B")(" ⚠ "),
+  error: chalk.hex("#EF4444")(" ✘ "),
+};
+
+const LEVEL_MSG_COLOR: Record<Exclude<LogLevel, "silent">, (s: string) => string> = {
+  debug: chalk.hex("#9CA3AF"),
+  info:  chalk.white,
+  warn:  chalk.hex("#FCD34D"),
+  error: chalk.hex("#FCA5A5"),
 };
 
 export function prettyFormat(
@@ -28,12 +41,13 @@ export function prettyFormat(
   message: string,
   meta?: Record<string, unknown>,
 ): string {
-  const badge = LEVEL_BADGE[level];
+  const icon = LEVEL_ICON[level];
+  const colorMsg = LEVEL_MSG_COLOR[level];
   const metaPart =
-    meta && Object.keys(meta).length > 0
-      ? chalk.gray(" " + JSON.stringify(meta))
+    meta !== undefined && Object.keys(meta).length > 0
+      ? chalk.hex("#6B7280")("  " + JSON.stringify(meta))
       : "";
-  return `${badge} ${message}${metaPart}`;
+  return `${icon}${colorMsg(message)}${metaPart}`;
 }
 
 // ── JSON formatter (CI / machine-readable output) ─────────────────────────

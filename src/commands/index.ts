@@ -1,8 +1,11 @@
 import type { Command } from "commander";
 
 import { registerBuildCommand } from "./build.js";
+import { registerExplainCommand } from "./explain.js";
+import { registerGenerateCommand } from "./generate.js";
 import { registerInitCommand } from "./init.js";
 import { registerServeCommand } from "./serve.js";
+import { registerWatchCommand } from "./watch.js";
 
 /**
  * Register all CLI commands onto the root Commander program.
@@ -16,4 +19,7 @@ export function registerAllCommands(program: Command): void {
   registerInitCommand(program);
   registerBuildCommand(program);
   registerServeCommand(program);
+  registerWatchCommand(program);
+  registerGenerateCommand(program);
+  registerExplainCommand(program);
 }

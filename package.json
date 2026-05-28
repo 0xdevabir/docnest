@@ -2,7 +2,13 @@
   "name": "docsmith",
   "version": "0.1.0",
   "description": "A powerful developer documentation tool — built for teams who ship.",
-  "keywords": ["docs", "cli", "documentation", "markdown", "developer-tools"],
+  "keywords": [
+    "docs",
+    "cli",
+    "documentation",
+    "markdown",
+    "developer-tools"
+  ],
   "homepage": "https://github.com/0xdevabir/docsmith",
   "bugs": {
     "url": "https://github.com/0xdevabir/docsmith/issues"
@@ -51,6 +57,7 @@
     "cosmiconfig": "^9.0.0",
     "dotenv": "^16.4.5",
     "fs-extra": "^11.2.0",
+    "jiti": "^2.7.0",
     "ora": "^8.0.1",
     "zod": "^3.23.8"
   },
