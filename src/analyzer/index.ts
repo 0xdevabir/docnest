@@ -22,6 +22,8 @@ export {
   extractServices,
 } from "./extractors/index.js";
 
+export { analyzeRoutes } from "./routes/index.js";
+
 export {
   findTsConfig,
   parseSingleFile,
@@ -52,9 +54,24 @@ export type {
   ModuleGraph,
   ParamEntry,
   PropertyEntry,
+  RouteAnalysis,
   ServiceEntry,
   ServiceKind,
   SourceLanguage,
   SourceLocation,
   SourceRange,
 } from "./types.js";
+
+export type {
+  AuthInfo,
+  AuthStrategy,
+  MiddlewarePurpose,
+  MiddlewareRef,
+  ParamLocation,
+  RouteEntry,
+  RouteGroup,
+  RouteMethod,
+  RouteParam,
+  ValidationInfo,
+  ValidationLib,
+} from "./routes/types.js";
