@@ -66,6 +66,55 @@ export { AUTH_LIB_RULES, PATTERN_RULES, STATE_LIB_RULES } from "./architecture/i
 export { PATH_SIGNAL_RULES, IMPORT_SIGNAL_RULES, NAMING_RULES } from "./architecture/index.js";
 export type { ArchitectureMap, ArchitectureOptions, ArchZone, ArchLayer, FeatureBoundary, ServiceLayer, StateManagementSystem, ApiArchitecture, AuthSystem, ArchPattern, CoreModule, BusinessLogicArea, ProjectMap, DirectoryNode, ArchitectureGraph, ArchNode, ArchEdge, ZoneKind, LayerKind, PatternKind, StateKind, AuthKind, CoreModuleRole, SignalWeights, ArchEvidence } from "./architecture/index.js";
 
+// Dependency graph engine
+export {
+  buildDependencyGraph,
+  buildFromModuleGraph,
+  detectEnhancedCycles,
+  findShortestPath,
+  findAllPaths,
+  topologicalSort,
+  transitiveDeps,
+  transitiveConsumers,
+  longestChain,
+  serializeGraph,
+  toMermaid,
+  toMermaidString,
+  toD3,
+  toDot,
+  categorizeNode,
+  computeDepths,
+  computeHubThreshold,
+  computeImportance,
+  computeMetrics,
+  findEntryPoints,
+} from "./dependency-graph/index.js";
+export type {
+  CircularDependency,
+  CycleSeverity,
+  D3Graph,
+  D3Link,
+  D3Node,
+  DependencyChain,
+  DependencyEdge,
+  DependencyGraph,
+  DependencyNode,
+  DotOptions,
+  EdgeKind,
+  FindAllPathsOptions,
+  GraphMetrics,
+  MermaidDirection,
+  MermaidEdge,
+  MermaidGraph,
+  MermaidNode,
+  MermaidOptions,
+  MermaidSubgraph,
+  NodeCategory,
+  SerializedEdge,
+  SerializedGraph,
+  SerializedNode,
+} from "./dependency-graph/index.js";
+
 // Types
 export type { CliContext, Result, DeepPartial, Dict, Maybe, SemVer } from "./types/index.js";
 export { ok, err } from "./types/index.js";
