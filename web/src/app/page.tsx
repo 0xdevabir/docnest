@@ -1,6 +1,7 @@
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Hero } from "@/components/sections/Hero";
+import { ProblemSolution } from "@/components/sections/ProblemSolution";
 import { Features } from "@/components/sections/Features";
 import { HowItWorks } from "@/components/sections/HowItWorks";
 import { CodeDemo } from "@/components/sections/CodeDemo";
@@ -13,6 +14,7 @@ export default function HomePage() {
       <Header />
       <main>
         <Hero />
+        <ProblemSolution />
         <Features />
         <HowItWorks />
         <CodeDemo />
