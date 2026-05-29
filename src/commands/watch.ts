@@ -1,19 +1,27 @@
-import { watch as fsWatch } from "node:fs";
 import path from "node:path";
 
 import { type Command } from "commander";
 
-import { tryLoadConfig } from "../core/config/index.js";
 import { withErrorHandling } from "../core/errors/handler.js";
 import { logger } from "../core/logger/index.js";
+import { WatchPipeline } from "../watch/index.js";
+import type {
+  ChangeBatch,
+  GenerateTarget,
+  RebuildResult,
+  WatchPhase,
+  WatchStats,
+} from "../watch/types.js";
 import {
   blank,
   colors,
   createSpinner,
+  divider,
   formatCmd,
   formatKey,
   formatPath,
   printBox,
+  printError,
   printInfo,
   printSuccess,
   printWarning,
@@ -21,209 +29,211 @@ import {
   sym,
 } from "../utils/terminal.js";
 
-interface WatchOptions {
-  config?: string;
+interface WatchCommandOptions {
   debounce?: string;
   ignore?: string[];
+  generate?: string;
+  output?: string;
+  verbose?: boolean;
 }
 
-/**
- * `docsmith watch` — watch documentation source files and rebuild on change.
- *
- * Uses Node's native `fs.watch` for file-system events. For production-grade
- * watching with glob patterns, replace with chokidar:
- *   `pnpm add chokidar`
- */
+const VALID_TARGETS: GenerateTarget[] = ["readme", "api", "contributing", "diagrams"];
+
 export function registerWatchCommand(program: Command): void {
   program
-    .command("watch")
-    .description("Watch source files and rebuild documentation on change")
-    .option("-c, --config <path>", "Path to a config file")
+    .command("watch [root]")
+    .description("Watch source files and incrementally regenerate documentation")
     .option(
       "--debounce <ms>",
-      "Debounce interval between rebuilds in milliseconds",
+      "Quiet window before a rebuild fires  (default: 300)",
       "300",
     )
     .option(
-      "--ignore <pattern>",
-      "Additional glob patterns to ignore (repeatable)",
+      "--ignore <dir>",
+      "Extra directory name to exclude (repeatable)",
       collect,
       [] as string[],
     )
+    .option(
+      "--generate <targets>",
+      "Comma-separated generators: readme,api,contributing,diagrams  (default: readme)",
+      "readme",
+    )
+    .option(
+      "--output <path>",
+      "Output file for the first generator target  (default: README.md)",
+    )
+    .option("--verbose", "Print per-file change details")
     .addHelpText(
       "after",
       `
 Examples:
   ${formatCmd("docsmith watch")}
-  ${formatCmd("docsmith watch --debounce 500")}
-  ${formatCmd("docsmith watch --ignore 'drafts/**' --ignore 'archive/**'")}
+  ${formatCmd("docsmith watch --generate readme,api")}
+  ${formatCmd("docsmith watch --debounce 500 --verbose")}
+  ${formatCmd("docsmith watch ./my-project --output docs/README.md")}
 `,
     )
     .action(
-      withErrorHandling(async (opts: WatchOptions) => {
-        // ── Load config ────────────────────────────────────────────────────
+      withErrorHandling(async (root: string | undefined, opts: WatchCommandOptions) => {
+        const projectRoot = path.resolve(process.cwd(), root ?? ".");
+        const debounceMs = Math.max(50, Number(opts.debounce ?? 300));
+        const verbose = opts.verbose ?? false;
 
-        const configSpinner = createSpinner("Loading configuration…").start();
-
-        const resolved = await tryLoadConfig({
-          ...(opts.config !== undefined && { configPath: opts.config }),
-          cwd: process.cwd(),
-        });
-
-        if (!resolved) {
-          configSpinner.fail(
-            "No docsmith.config.* found. Run " +
-              formatCmd("docsmith init") +
-              " first.",
+        const targets = (opts.generate ?? "readme")
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t): t is GenerateTarget =>
+            VALID_TARGETS.includes(t as GenerateTarget),
           );
-          process.exit(1);
+
+        if (targets.length === 0) {
+          printWarning("No valid --generate targets. Defaulting to: readme");
+          targets.push("readme");
         }
 
-        const { config, filepath } = resolved;
-        configSpinner.succeed(
-          `${colors.dim("Config")}  ${formatPath(path.relative(process.cwd(), filepath))}`,
+        const outputs: Partial<Record<GenerateTarget, string>> = {};
+        if (opts.output !== undefined && targets[0] !== undefined) {
+          outputs[targets[0]] = opts.output;
+        }
+
+        blank();
+        section("DocSmith — Watch mode");
+        blank();
+        console.log(
+          formatKey("Root", formatPath(path.relative(process.cwd(), projectRoot) || ".")),
         );
-
-        // ── Summary ────────────────────────────────────────────────────────
-
-        const debounceMs = Math.max(50, Number(opts.debounce ?? 300));
-        const watchDir = path.resolve(process.cwd(), "docs");
-
-        blank();
-        section("Watch mode");
-        blank();
-        console.log(formatKey("Project", colors.highlight(config.name)));
-        console.log(formatKey("Watch dir", formatPath(path.relative(process.cwd(), watchDir))));
-        console.log(formatKey("Patterns", config.include.map((p) => colors.muted(p)).join(", ")));
-        console.log(formatKey("Output", formatPath(config.output.dir)));
+        console.log(formatKey("Generators", targets.map((t) => colors.accent(t)).join(", ")));
         console.log(formatKey("Debounce", colors.muted(`${debounceMs}ms`)));
+        if (opts.ignore && opts.ignore.length > 0) {
+          console.log(
+            formatKey("Ignore", opts.ignore.map((i) => colors.muted(i)).join(", ")),
+          );
+        }
         blank();
 
-        // ── Start watcher ──────────────────────────────────────────────────
+        const initSpinner = createSpinner("Scanning and running initial build…").start();
+        let rebuildCount = 0;
 
-        printInfo(
-          `Watching for changes… press ${colors.muted("Ctrl+C")} to stop`,
-        );
-        blank();
-
-        let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-        let rebuilding = false;
-        let changeCount = 0;
-
-        const triggerRebuild = (changedFile: string) => {
-          if (debounceTimer !== null) clearTimeout(debounceTimer);
-
-          debounceTimer = setTimeout(async () => {
-            if (rebuilding) return;
-            rebuilding = true;
-            changeCount++;
-
-            const rel = path.relative(process.cwd(), changedFile);
-            const spinner = createSpinner(
-              `Rebuilding  ${colors.muted(`(#${changeCount})`)}  ${colors.dim(rel)}…`,
-            ).start();
-
-            try {
-              // Simulated rebuild — replace with real build pipeline call
-              // once `buildDocs(ctx)` is extracted from commands/build.ts
-              await simulateRebuild();
-
-              spinner.succeed(
-                `${sym.tick}  Rebuilt  ${colors.muted(`#${changeCount}`)}  ${colors.dim(rel)}  ${colors.muted(new Date().toLocaleTimeString())}`,
+        const pipeline = new WatchPipeline(
+          projectRoot,
+          {
+            debounceMs,
+            generate: targets,
+            verbose,
+            ...(opts.ignore !== undefined && opts.ignore.length > 0 && { ignore: opts.ignore }),
+            ...(Object.keys(outputs).length > 0 && { outputs }),
+          },
+          {
+            onReady(fileCount: number) {
+              initSpinner.succeed(
+                `Ready  ${colors.muted("·")} ${colors.accent(String(fileCount))} source files` +
+                  `  ${colors.muted("·")} watching for changes…`,
               );
-            } catch (error) {
-              spinner.fail(`Rebuild failed on ${colors.error(rel)}`);
-              logger.debug(error instanceof Error ? error.message : String(error));
-            } finally {
-              rebuilding = false;
-            }
-          }, debounceMs);
-        };
+              blank();
+              printInfo(`Press ${colors.muted("Ctrl+C")} to stop.`);
+              blank();
+            },
 
-        // Attempt to watch the docs directory
-        let watcher: ReturnType<typeof fsWatch> | null = null;
+            onPhase(phase: WatchPhase, detail?: string) {
+              logger.debug(`[watch] phase=${phase}${detail !== undefined ? ` ${detail}` : ""}`);
+            },
+
+            onBatchStart(batch: ChangeBatch) {
+              if (batch.configChanged) {
+                console.log(`  ${sym.warning}  Config changed — full rebuild queued`);
+              } else if (verbose) {
+                for (const fp of batch.sources) {
+                  console.log(
+                    `  ${sym.dot}  ${colors.dim(path.relative(projectRoot, fp))} changed`,
+                  );
+                }
+              }
+            },
+
+            onRebuildComplete(result: RebuildResult, stats: WatchStats) {
+              rebuildCount++;
+              const ts  = colors.muted(new Date().toLocaleTimeString());
+              const dur = colors.muted(`${result.durationMs}ms`);
+              const n   = result.changedFiles.length;
+              const kind = result.fullRebuild
+                ? "full rebuild"
+                : `${n} file${n !== 1 ? "s" : ""}`;
+
+              console.log(
+                `  ${sym.success}  Rebuilt  ` +
+                  `${colors.muted(`#${rebuildCount}`)}  ` +
+                  `${colors.dim(kind)}  ` +
+                  `${dur}  ${ts}`,
+              );
+
+              if (verbose && result.outputCount > 0) {
+                console.log(
+                  `  ${sym.dot}  ${result.outputCount} output${result.outputCount !== 1 ? "s" : ""} written`,
+                );
+              }
+
+              void stats; // available for future status-line display
+            },
+
+            onError(err: Error) {
+              if (
+                err.message.includes("ENOENT") ||
+                err.message.includes("not running")
+              ) {
+                return; // suppress spurious watcher close noise
+              }
+              blank();
+              printError(`Error: ${err.message}`);
+              logger.debug(err.stack ?? err.message);
+              blank();
+            },
+
+            onClose() {
+              blank();
+              divider();
+              printSuccess(
+                `Watch stopped after ${rebuildCount} rebuild${rebuildCount !== 1 ? "s" : ""}.`,
+              );
+              blank();
+            },
+          },
+        );
+
+        // Graceful shutdown on Ctrl+C / SIGTERM
+        const shutdown = (): void => {
+          pipeline.close();
+          process.exit(0);
+        };
+        process.once("SIGINT",  shutdown);
+        process.once("SIGTERM", shutdown);
 
         try {
-          watcher = fsWatch(
-            watchDir,
-            { recursive: true, persistent: true },
-            (_event, filename) => {
-              if (filename === null) return;
+          await pipeline.start();
+        } catch (err) {
+          initSpinner.fail("Initial build failed.");
+          throw err;
+        }
 
-              const fullPath = path.join(watchDir, filename);
-
-              // Skip files matching ignore patterns
-              const ignored = [
-                "node_modules",
-                ".git",
-                config.output.dir,
-                ...(opts.ignore ?? []),
-              ];
-              if (ignored.some((ig) => fullPath.includes(ig))) return;
-
-              triggerRebuild(fullPath);
-            },
-          );
-        } catch {
-          printWarning(
-            `Could not watch ${formatPath(watchDir)} — directory may not exist yet.`,
-          );
+        if (targets.length === 1) {
           blank();
           printBox(
             [
-              `${sym.bullet}  Create the docs directory first:`,
-              `   ${formatCmd("mkdir docs")}`,
-              `   ${formatCmd('echo "# Hello" > docs/index.md')}`,
-              "",
-              `${sym.bullet}  Then re-run watch:`,
-              `   ${formatCmd("docsmith watch")}`,
+              `More generators:  ${formatCmd("--generate readme,api,contributing")}`,
+              `Custom output:    ${formatCmd("--output docs/README.md")}`,
+              `Longer debounce:  ${formatCmd("--debounce 500")}`,
             ],
-            "Directory not found",
+            "Tips",
           );
           blank();
-          process.exit(1);
         }
 
-        // Upgrade notice for production-grade watching
-        printBox(
-          [
-            `${sym.info}  Install ${colors.code("chokidar")} for glob-based watching:`,
-            `   ${formatCmd("pnpm add chokidar")}`,
-            "",
-            `${sym.info}  Then swap the watcher in ${formatPath("src/commands/watch.ts")}`,
-          ],
-          "Tip",
-        );
-        blank();
-
-        // ── Graceful shutdown ──────────────────────────────────────────────
-
-        const cleanup = () => {
-          blank();
-          if (debounceTimer !== null) clearTimeout(debounceTimer);
-          watcher?.close();
-          printSuccess(`Watch stopped. ${changeCount} rebuild(s) triggered.`);
-          blank();
-          process.exit(0);
-        };
-
-        process.on("SIGINT", cleanup);
-        process.on("SIGTERM", cleanup);
-
-        // Keep the process alive
+        // Block the process — SIGINT/SIGTERM handlers call pipeline.close()
         await new Promise<void>(() => undefined);
       }, logger),
     );
 }
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
-
-/** Accumulate --ignore flags into an array. */
 function collect(value: string, previous: string[]): string[] {
   return [...previous, value];
-}
-
-/** Placeholder until the build pipeline is extracted into a callable function. */
-async function simulateRebuild(): Promise<void> {
-  await new Promise<void>((resolve) => setTimeout(resolve, 120));
 }

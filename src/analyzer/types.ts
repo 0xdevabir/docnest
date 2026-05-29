@@ -277,6 +277,12 @@ export interface AnalysisOptions {
   /** Skip graph construction (faster for one-shot per-file queries). */
   skipGraph?: boolean;
   ignore?: string[];
+  /**
+   * Exclude *.test.*, *.spec.*, and __tests__/ directories from analysis.
+   * Default: true. Documentation generators rarely need test file data and
+   * skipping them cuts parse work by 20–40 % on typical projects.
+   */
+  skipTestFiles?: boolean;
 }
 
 export interface AnalysisResult {

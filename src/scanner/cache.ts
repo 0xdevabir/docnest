@@ -1,6 +1,8 @@
 import type { CachedScan, ProjectStructure } from "./types.js";
 
-const DEFAULT_TTL_MS = 30_000;
+// 5 minutes — long enough to share across commands in one CLI session,
+// short enough that stale data after a file change isn't a real concern.
+const DEFAULT_TTL_MS = 5 * 60 * 1_000;
 const DEFAULT_MAX_SIZE = 20;
 
 /**

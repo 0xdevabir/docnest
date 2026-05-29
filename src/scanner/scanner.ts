@@ -50,6 +50,17 @@ export class RepositoryScanner {
     const cached = this.cache.get(root, rootMtime);
     if (cached) return cached;
 
+    // Apply .gitignore rules before walking — extracts simple dir-name patterns
+    try {
+      const gitignoreContent = await fs.readFile(
+        path.join(root, ".gitignore"),
+        "utf-8",
+      );
+      ignore.applyGitIgnore(gitignoreContent);
+    } catch {
+      // No .gitignore — fine, continue with defaults
+    }
+
     const start = Date.now();
 
     const { files, totalDirs, skippedDirs } = await walkBFS(
