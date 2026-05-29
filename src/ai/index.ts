@@ -1,26 +1,28 @@
+import { AIError } from "./errors.js";
+import { createProviderAdapter } from "./providers/index.js";
 import type {
+  AIMiddleware,
   AIProvider,
   AIProviderAdapter,
   AIProviderConfig,
+  RateLimitOptions,
+  RetryOptions,
 } from "./types.js";
 
-// ── Registry ───────────────────────────────────────────────────────────────────
+// ── Registry ──────────────────────────────────────────────────────────────────
 
 class AIProviderRegistry {
   private readonly adapters = new Map<AIProvider, AIProviderAdapter>();
 
   /**
-   * Register a provider adapter. Call this during application startup
-   * (or lazily before the first command that needs AI).
+   * Register a provider adapter.
+   * Call at startup or before the first command that needs AI.
    */
   register(adapter: AIProviderAdapter): void {
     this.adapters.set(adapter.name, adapter);
   }
 
-  /**
-   * Look up a registered adapter by name. Returns `undefined` when the
-   * provider has not been registered.
-   */
+  /** Look up a registered adapter by name. */
   get(provider: AIProvider): AIProviderAdapter | undefined {
     return this.adapters.get(provider);
   }
@@ -32,30 +34,30 @@ class AIProviderRegistry {
   resolve(provider: AIProvider): AIProviderAdapter {
     const adapter = this.adapters.get(provider);
     if (adapter === undefined) {
-      throw new Error(
+      throw new AIError(
         `AI provider "${provider}" is not registered. ` +
-          `Available: ${this.listAvailable().join(", ") || "none"}. ` +
-          `Install the corresponding adapter package and register it at startup.`,
+          `Available: ${this.listAvailable().join(", ") || "none"}.`,
+        "not_configured", provider, false,
       );
     }
     if (!adapter.isConfigured()) {
-      throw new Error(
-        `AI provider "${provider}" is registered but not configured. ` +
-          `Check that its API key / settings are set correctly.`,
+      throw new AIError(
+        `AI provider "${provider}" is registered but not configured — check its API key.`,
+        "not_configured", provider, false,
       );
     }
     return adapter;
   }
 
-  /** Returns the names of all registered (not necessarily configured) providers. */
+  /** All registered provider names (configured or not). */
   list(): AIProvider[] {
     return [...this.adapters.keys()];
   }
 
-  /** Returns the names of registered AND configured providers. */
+  /** Registered AND configured provider names. */
   listAvailable(): AIProvider[] {
     return [...this.adapters.entries()]
-      .filter(([, adapter]) => adapter.isConfigured())
+      .filter(([, a]) => a.isConfigured())
       .map(([name]) => name);
   }
 
@@ -65,18 +67,85 @@ class AIProviderRegistry {
   }
 }
 
-// ── Singleton ──────────────────────────────────────────────────────────────────
-
 export const aiRegistry = new AIProviderRegistry();
 
-// ── Re-exports ─────────────────────────────────────────────────────────────────
+// ── Factory ───────────────────────────────────────────────────────────────────
+
+/**
+ * Create a fully wired adapter from a provider config.
+ * Optionally wraps it with retry, rate-limiting, and/or additional middleware.
+ *
+ * Middleware is applied in this fixed order (outermost → innermost):
+ *   custom → logging (if any) → retry → rateLimit → provider
+ *
+ * @example
+ * const adapter = createAdapter(
+ *   { provider: "anthropic" },
+ *   { retry: { maxAttempts: 3 }, rateLimit: { requestsPerMinute: 60 } },
+ * );
+ */
+export async function createAdapter(
+  config: AIProviderConfig,
+  opts: {
+    retry?:       RetryOptions;
+    rateLimit?:   RateLimitOptions;
+    middleware?:  AIMiddleware[];
+  } = {},
+): Promise<AIProviderAdapter> {
+  const { compose, withRetry, withRateLimit } = await import("./middleware/index.js");
+
+  const layers: AIMiddleware[] = [];
+
+  // Extra middleware (outermost — added last so they wrap everything below)
+  if (opts.middleware !== undefined) layers.push(...opts.middleware);
+
+  // Retry sits outside rate-limit so each retry attempt passes through rate-limit
+  if (opts.retry !== undefined)     layers.push(withRetry(opts.retry));
+  if (opts.rateLimit !== undefined) layers.push(withRateLimit(opts.rateLimit));
+
+  const base = createProviderAdapter(config);
+  return layers.length > 0 ? compose(...layers)(base) : base;
+}
+
+// ── Re-exports ────────────────────────────────────────────────────────────────
+
+export { AIError } from "./errors.js";
+export type { AIErrorCode } from "./errors.js";
+
+export {
+  AnthropicAdapter,
+  OpenAIAdapter,
+  OllamaAdapter,
+  createProviderAdapter,
+} from "./providers/index.js";
+
+export {
+  compose,
+  withFallback,
+  withLogging,
+  withRateLimit,
+  withRetry,
+  FallbackAdapter,
+} from "./middleware/index.js";
+
+export type { LoggingOptions } from "./middleware/index.js";
+
+export { buildGenerateRequest, buildExplainRequest } from "./prompts/index.js";
 
 export type {
+  AIMiddleware,
   AIProvider,
   AIProviderAdapter,
   AIProviderConfig,
   AIResponse,
   AIUsage,
-  GenerateRequest,
+  ChatMessage,
+  ChatRequest,
   ExplainRequest,
+  FallbackOptions,
+  GenerateRequest,
+  MessageRole,
+  RateLimitOptions,
+  RetryOptions,
+  StreamChunk,
 } from "./types.js";

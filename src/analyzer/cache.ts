@@ -1,59 +1,67 @@
-import { stat } from "node:fs/promises";
+import path from "node:path";
 
+import { DiskCache } from "../core/perf/disk-cache.js";
 import type { FileAnalysis } from "./types.js";
 
-interface CacheEntry {
-  analysis: FileAnalysis;
-  /** File mtime at cache-write time. */
-  mtime: number;
-}
+const CACHE_FILENAME = "analysis-v1.json";
 
 /**
- * LRU-bounded in-memory analysis cache keyed by absolute file path.
- * Invalidation uses mtime — sufficient for a single-process tool.
+ * Analysis cache backed by a persistent on-disk store.
+ *
+ * Life-cycle per CLI invocation:
+ *   1. `init(root)` — load the cache file once into memory.
+ *   2. `getIfValid(path, mtime)` — sync O(1) lookup, no disk I/O.
+ *   3. `set(path, analysis, mtime)` — sync in-memory write.
+ *   4. `flush()` — write dirty entries to disk once at the end.
+ *
+ * Between invocations the disk cache persists, so unchanged files are never
+ * re-parsed even across separate `docsmith` commands.
  */
 export class AnalysisCache {
-  private readonly store = new Map<string, CacheEntry>();
+  private disk?: DiskCache<FileAnalysis>;
+  private initializedFor?: string;
 
-  constructor(private readonly maxSize = 2000) {}
+  /**
+   * Load the project's disk cache. Idempotent for the same root.
+   * Creates the cache directory lazily on first flush.
+   */
+  async init(root: string): Promise<void> {
+    if (this.initializedFor === root) return;
+    this.initializedFor = root;
 
-  async isValid(filePath: string): Promise<boolean> {
-    const entry = this.store.get(filePath);
-    if (entry === undefined) return false;
-    try {
-      const st = await stat(filePath);
-      return st.mtimeMs === entry.mtime;
-    } catch {
-      return false;
-    }
+    const cacheFile = path.join(root, ".docsmith", "cache", CACHE_FILENAME);
+    this.disk = new DiskCache<FileAnalysis>(cacheFile);
+    await this.disk.load();
   }
 
-  get(filePath: string): FileAnalysis | undefined {
-    const entry = this.store.get(filePath);
-    if (entry === undefined) return undefined;
-    // LRU: refresh position
-    this.store.delete(filePath);
-    this.store.set(filePath, entry);
-    return entry.analysis;
+  /**
+   * Return the cached `FileAnalysis` if — and only if — the on-disk mtime
+   * matches exactly. Returns `undefined` on any miss or stale entry.
+   * Synchronous after `init()`.
+   */
+  getIfValid(filePath: string, mtime: number): FileAnalysis | undefined {
+    return this.disk?.getIfValid(filePath, mtime);
   }
 
+  /** Store an analysis result with the file's current mtime. */
   set(filePath: string, analysis: FileAnalysis, mtime: number): void {
-    if (this.store.size >= this.maxSize) {
-      const oldest = this.store.keys().next().value;
-      if (oldest !== undefined) this.store.delete(oldest);
-    }
-    this.store.set(filePath, { analysis, mtime });
+    this.disk?.set(filePath, analysis, mtime);
+  }
+
+  /** Write dirty entries to disk. No-op if nothing changed. */
+  async flush(): Promise<void> {
+    await this.disk?.flush();
   }
 
   invalidate(filePath: string): void {
-    this.store.delete(filePath);
+    this.disk?.invalidate(filePath);
   }
 
   clear(): void {
-    this.store.clear();
+    this.disk?.clear();
   }
 
   get size(): number {
-    return this.store.size;
+    return this.disk?.size ?? 0;
   }
 }
