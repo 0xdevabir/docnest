@@ -9,10 +9,10 @@ import { cn } from "@/lib/utils";
 import { Menu, X, Terminal, ArrowRight } from "lucide-react";
 
 const navLinks = [
-  { label: "Features", href: "#features" },
+  { label: "Features",    href: "#features"    },
   { label: "How it works", href: "#how-it-works" },
-  { label: "Code demo", href: "#demo" },
-  { label: "Docs", href: "#docs" },
+  { label: "Workflow",    href: "#workflow"     },
+  { label: "Open Source", href: "#open-source" },
 ];
 
 export function Header() {
