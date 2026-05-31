@@ -22,10 +22,10 @@ import { viewport } from "@/styles/animations";
 import { cn } from "@/lib/utils";
 
 const STATS = [
-  { icon: Star,       label: "GitHub Stars",      value: "—",  sub: "star us",     color: "text-amber-400",   bg: "bg-amber-500/8   border-amber-500/20"  },
-  { icon: GitFork,    label: "Forks",             value: "—",  sub: "fork it",     color: "text-brand-400",   bg: "bg-brand-500/8   border-brand-500/20"  },
-  { icon: GitPullRequest, label: "Contributors",  value: "—",  sub: "join us",     color: "text-cyan-400",    bg: "bg-cyan-500/8    border-cyan-500/20"   },
-  { icon: Package,    label: "npm Downloads",     value: "—",  sub: "growing",     color: "text-emerald-400", bg: "bg-emerald-500/8 border-emerald-500/20"},
+  { icon: Star,           label: "GitHub Stars",  value: "New",    sub: "star us first",  color: "text-amber-400",   bg: "bg-amber-500/8   border-amber-500/20"  },
+  { icon: GitFork,        label: "Open Issues",   value: "0",      sub: "clean slate",    color: "text-brand-400",   bg: "bg-brand-500/8   border-brand-500/20"  },
+  { icon: GitPullRequest, label: "Contributors",  value: "2",      sub: "join us",        color: "text-cyan-400",    bg: "bg-cyan-500/8    border-cyan-500/20"   },
+  { icon: Package,        label: "License",       value: "MIT",    sub: "forever free",   color: "text-emerald-400", bg: "bg-emerald-500/8 border-emerald-500/20"},
 ] as const;
 
 const HOW_TO_CONTRIBUTE = [
@@ -178,7 +178,7 @@ export function OpenSourceSection() {
                   >
                     <GlowCard className={cn("p-5 h-full flex flex-col gap-3", item.border)}>
                       <div className={cn("flex h-9 w-9 items-center justify-center rounded-xl border", item.bg, item.border)}>
-                        <Icon className={cn("h-4.5 w-4.5", item.color)} />
+                        <Icon className={cn("h-4 w-4", item.color)} />
                       </div>
                       <div>
                         <h4 className={cn("text-[14px] font-semibold mb-1", item.color)}>{item.title}</h4>

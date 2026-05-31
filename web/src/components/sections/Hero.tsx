@@ -327,7 +327,7 @@ export function Hero() {
   const [activeId, setActiveId] = useState("generate");
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-20">
+    <section id="hero" className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-20">
       <HeroBackground />
 
       <Container size="xl">

@@ -5,22 +5,24 @@ import { cn } from "@/lib/utils";
 
 const footerLinks = {
   Product: [
-    { label: "Features", href: "#features" },
-    { label: "How it works", href: "#how-it-works" },
-    { label: "Changelog", href: "#" },
-    { label: "Roadmap", href: "#" },
+    { label: "Features",      href: "#features"      },
+    { label: "How it works",  href: "#how-it-works"  },
+    { label: "Visualization", href: "#visualization" },
+    { label: "Workflow",      href: "#workflow"       },
+    { label: "Open Source",   href: "#open-source"   },
+    { label: "Future",        href: "#future"         },
   ],
   Developers: [
-    { label: "Documentation", href: "#" },
-    { label: "API Reference", href: "#" },
-    { label: "Examples", href: "#" },
-    { label: "GitHub", href: "https://github.com" },
+    { label: "Documentation", href: "#"                   },
+    { label: "API Reference", href: "#"                   },
+    { label: "Examples",      href: "#"                   },
+    { label: "GitHub",        href: "https://github.com" },
   ],
   Company: [
-    { label: "Blog", href: "#" },
-    { label: "About", href: "#" },
+    { label: "Blog",    href: "#" },
+    { label: "About",   href: "#" },
     { label: "Privacy", href: "#" },
-    { label: "Terms", href: "#" },
+    { label: "Terms",   href: "#" },
   ],
 };
 

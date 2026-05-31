@@ -16,7 +16,7 @@ import { Container } from "@/components/shared/Container";
 import { SectionLabel } from "@/components/shared/SectionLabel";
 import { AnimatedGroup, AnimatedItem } from "@/components/shared/AnimatedText";
 import { GlowCard } from "@/components/shared/GlowCard";
-import { viewport, fadeInUp } from "@/styles/animations";
+import { viewport } from "@/styles/animations";
 import { cn } from "@/lib/utils";
 
 const INTEGRATIONS = [
@@ -121,8 +121,9 @@ function PipelineDiagram() {
         </div>
       </div>
 
-      {/* Steps */}
-      <div className="flex items-center gap-2">
+      {/* Steps — horizontal scroll on small screens */}
+      <div className="overflow-x-auto -mx-2 px-2">
+      <div className="flex items-center gap-2 min-w-[480px]">
         {PIPELINE_STEPS.map((step, i) => (
           <div key={step.label} className="flex items-center gap-2 flex-1">
             <motion.div
@@ -153,6 +154,7 @@ function PipelineDiagram() {
             )}
           </div>
         ))}
+      </div>
       </div>
 
       {/* Log lines */}
