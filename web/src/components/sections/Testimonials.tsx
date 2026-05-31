@@ -71,10 +71,11 @@ const testimonials = [
 
 export function Testimonials() {
   return (
-    <section className="relative py-28 overflow-hidden">
+    <section id="testimonials" className="relative py-28 overflow-hidden">
       {/* Background */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[400px] bg-brand-500/4 blur-[120px] rounded-full" />
+        <div className="absolute inset-0 grid-bg opacity-[0.10]" />
       </div>
 
       <Container>

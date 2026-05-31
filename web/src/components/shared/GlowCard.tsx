@@ -36,11 +36,13 @@ export function GlowCard({
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      whileHover={{ y: -2, transition: { duration: 0.2, ease: "easeOut" } }}
       className={cn(
         "group relative overflow-hidden rounded-2xl",
         "bg-surface border border-border",
-        "transition-all duration-300",
+        "transition-colors duration-300",
         "hover:border-brand-500/40",
+        "will-change-transform",
         className
       )}
     >
